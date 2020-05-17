@@ -6,13 +6,13 @@ import java.util.Scanner;
 public class Main {
 
     public static char[][] gameField;
-    public static int sizeOfField = 3;
+    public static int sizeOfField = 5;
 
     public static void main(String[] args) {
         letsPlay();
     }
 
-        public static void letsPlay(){
+    public static void letsPlay() {
         char[] signs = yourSign();
         playTicTacToe(signs[0], signs[1]);
     }
@@ -35,17 +35,17 @@ public class Main {
     public static void playTicTacToe(char userSign, char computerSign) {
         loadOurEmptyFieldWithSize();
         int countOfMoves = 0;
-        if (userSign=='\u004F'){
-            System.out.println("Ваш знак - "+userSign+", так что Компьютер ходит первым, вот он и сходил - ");
+        if (userSign == '\u004F') {
+            System.out.println("Ваш знак - " + userSign + ", так что Компьютер ходит первым, вот он и сходил - ");
             computerMove(computerSign);
             countOfMoves = countOfMoves + 1;
         } else
-            System.out.println("Ваш знак - "+userSign+", так что ваш ход первый.");
+            System.out.println("Ваш знак - " + userSign + ", так что ваш ход первый.");
         printOurField();
         do {
             yourMove(userSign);
             countOfMoves = countOfMoves + 1;
-            if (countOfMoves == 9) {
+            if (countOfMoves == sizeOfField * sizeOfField) {
                 if (theWinnerIsFound(gameField)) {
                     printOurField();
                     System.out.println("Победа за тобой");
@@ -63,7 +63,7 @@ public class Main {
             computerMove(computerSign);
             printOurField();
             countOfMoves = countOfMoves + 1;
-            if (countOfMoves == 9) {
+            if (countOfMoves == sizeOfField * sizeOfField) {
                 if (theWinnerIsFound(gameField)) {
                     printOurField();
                     System.out.println("Победа за тобой");
@@ -159,36 +159,92 @@ public class Main {
     }
 
     static boolean theWinnerIsFound(char[][] gameField) {
-        for (int i = 0; i < sizeOfField; i++) {
-            if (gameField[i][1] != '\u00B7' && gameField[i][0] == gameField[i][1] && gameField[i][0] == gameField[i][2])
-                return true;
-            for (int j = 1; j < sizeOfField; j++) {
-                if (gameField[0][j] != '\u00B7' && gameField[0][j] == gameField[1][j] && gameField[0][j] == gameField[2][j])
-                    return true;
-            }
-        }
-        int tempotempo = 0; // проверка первой диагонали
-        for (int i = 0; i < sizeOfField; i++) {
-            if (gameField[i][i] == gameField[0][0] && gameField[0][0] != '\u00B7') {
-                tempotempo = tempotempo + 1;
-                if (tempotempo == 3) {
-                    return true;
+        int horizonalLineScore = 0;
+        int verticlLineScore = 0;
+        for (int h = 0; h < 2; h++) {
+            for (int i = 0+h; i < sizeOfField-1+h; i++) {
+                horizonalLineScore=0;
+                for (int j = 0+h; j < sizeOfField-1+h; j++) {
+                    if (gameField[i][j]==gameField[i][i] && gameField[i][i]!='\u00B7'){
+                        horizonalLineScore=horizonalLineScore+1;
+                        if (horizonalLineScore==4){
+                            return true;
+                        }
+                    }
                 }
             }
 
-        }
-
-        int tempotempo2 = 0;  // проверка второй диагонали
-        for (int i = sizeOfField - 1; i >= 0; i--) {
-            if (gameField[i][sizeOfField - 1 - i] == gameField[1][1] && gameField[1][1] != '\u00B7') {
-                tempotempo2 = tempotempo2 + 1;
-                if (tempotempo2 == 3) {
-                    return true;
+            for (int i = 0+h; i < sizeOfField-1+h; i++) {
+                verticlLineScore=0;
+                for (int j = 0+h; j < sizeOfField-1+h; j++) {
+                    if (gameField[j][i]==gameField[i][i] && gameField[i][i]!='\u00B7'){
+                        verticlLineScore=verticlLineScore+1;
+                        if (verticlLineScore==4){
+                            return true;
+                        }
+                    }
                 }
             }
         }
+
+        // Я разбиваю квадрат 5 на 5 на два квадрата 4 на 4, и считаю 4 очка в них.
+        // Во время совмещение квадрата 4 на 4 со стартовой 0;0 и квадрата 4 на 4 со стартовой 1;1
+        // в наш диапазон не входят две угловые точки 0;4 и и 4;0
+        // я верю что их возможно как-то внести в диапазон, но на это у меня просто не хвататит времени.
+        // но я этот факт осознаю и вот он отвратительный код на 4 оставишихся ситуации:
+
+        if (gameField[0][1]==gameField[0][2] && gameField[0][1]==gameField[0][3]
+                && gameField[0][1]==gameField[0][4] && gameField[0][1]!='\u00B7')
+            return true;
+        if (gameField[1][0]==gameField[2][0] && gameField[1][0]==gameField[3][0]
+                && gameField[1][0]==gameField[4][0] && gameField[1][0]!='\u00B7')
+            return true;
+        if (gameField[4][1]==gameField[4][2] && gameField[4][1]==gameField[4][3]
+                && gameField[4][1]==gameField[4][4] && gameField[4][1]!='\u00B7')
+            return true;;
+        if (gameField[1][4]==gameField[2][4] && gameField[1][4]==gameField[3][4]
+                && gameField[1][4]==gameField[4][4] && gameField[1][4]!='\u00B7')
+            return true;
+
+
+        int firstDiagonalScore = 0; // проверка первой диагонали
+        for (int j = 0; j < 2; j++) { // проверяем сумму 4 элементов идущих подряд из четырёх, 2 раза, сдвигая диапазон на 1 шаг по диагонали
+            firstDiagonalScore = 0;
+            for (int i = 0 + j; i < sizeOfField - 1 + j; i++) {
+                if (gameField[i][i] == gameField[0][0] && gameField[0][0] != '\u00B7') {
+                    firstDiagonalScore = firstDiagonalScore + 1;
+                    if (firstDiagonalScore == 4) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        int secondDiagonalScore = 0;  // проверка второй диагонали
+        for (int j = 0; j < 2; j++) { // проверяем сумму 4 элементов идущих подряд из четырёх, 2 раза, сдвигая диапазон на 1 шаг по диагонали
+            secondDiagonalScore = 0;
+            for (int i = sizeOfField - 2 + j; i >= 0 + j; i--) {
+                if (gameField[i][sizeOfField - 1 - i] == gameField[2][2] && gameField[2][2] != '\u00B7') {
+                    secondDiagonalScore = secondDiagonalScore + 1;
+                    if (secondDiagonalScore == 4) {
+                        return true;
+                    }
+                }
+            }
+        }
+//            for (int i = sizeOfField - 1; i >= 0; i--) {
+//                if (gameField[i][sizeOfField - 1 - i] == gameField[2][2] && gameField[2][2] != '\u00B7') {
+//                    secondDiagonalScore = secondDiagonalScore + 1;
+//                    if (secondDiagonalScore == 4) {
+//                        return true;
+//                    }
+//                }
+//
+//            }
         return false;
     }
+
 }
+
 
 
